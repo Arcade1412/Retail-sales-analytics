@@ -6,6 +6,24 @@ An end-to-end retail sales analytics project built to demonstrate practical **SQ
 
 The project analyzes retail transaction data to identify drivers of sales performance, product profitability, customer behavior, marketing effectiveness, and geographic performance.
 
+## Power BI Dashboard Preview
+
+### Executive Sales Overview
+
+![Executive Sales Overview](PowerBI/Dashboard_Screenshots/Executive_Dashboard.png)
+
+### Product Analysis
+
+![Product Analysis](PowerBI/Dashboard_Screenshots/Product_Analysis.png)
+
+### Sales Performance
+
+![Sales Performance](PowerBI/Dashboard_Screenshots/Sales_Performance.png)
+
+### Customer & Marketing Analysis
+
+![Customer & Marketing Analysis](PowerBI/Dashboard_Screenshots/Customer_Marketing_Analysis.png)
+
 ## Business Objectives
 
 - Evaluate overall sales and profitability performance
