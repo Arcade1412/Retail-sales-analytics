@@ -179,6 +179,80 @@ The final Power BI dashboards provide an executive-level view while allowing use
 
 ---
 
+## Business Recommendations
+
+Based on the SQL analysis and Power BI dashboards, the following business recommendations were identified:
+
+### 1. Prioritize High-Performing Product Categories
+
+Home & Kitchen generated the highest category revenue in the analysis.
+
+**Recommendation:**  
+Prioritize inventory availability, merchandising, and promotional visibility for high-performing categories. However, revenue should be evaluated alongside product margin before increasing promotional spend.
+
+**Evidence:**  
+Category revenue and profitability were analyzed using SQL and visualized in the Product Analysis section of the Power BI dashboard.
+
+---
+
+### 2. Strengthen Organic Acquisition
+
+Organic traffic was the strongest revenue-generating traffic source.
+
+**Recommendation:**  
+Continue investing in organic acquisition through SEO, content, and product discoverability while monitoring revenue and average order value to ensure the channel continues to generate high-value customers.
+
+**Evidence:**  
+SQL analysis compares revenue, orders, sessions, and average order value across traffic sources. The Customer & Marketing Power BI dashboard provides the corresponding channel-performance view.
+
+---
+
+### 3. Optimize the Mobile Shopping Experience
+
+Mobile generated the highest revenue among the analyzed devices.
+
+**Recommendation:**  
+Prioritize the mobile customer journey, particularly product discovery, page performance, checkout usability, and overall shopping experience.
+
+**Evidence:**  
+SQL compares revenue and average order value by device, while the Sales Performance and Customer & Marketing dashboards provide the visual device-level comparison.
+
+---
+
+### 4. Protect Product Profitability
+
+Electronics showed the highest average product margin in the analysis.
+
+**Recommendation:**  
+Use profitability together with revenue when deciding which products and categories should receive additional inventory or promotional support. High sales volume should not be the only criterion for prioritization.
+
+**Evidence:**  
+Product-level revenue, gross profit, and margin were analyzed using SQL and presented through the Product Analysis dashboard.
+
+---
+
+### 5. Focus Retention Efforts on the Existing Customer Base
+
+The analysis identified a **61.75% repeat customer rate**, indicating that a substantial portion of customers already make repeat purchases.
+
+**Recommendation:**  
+Prioritize retention initiatives such as personalized offers, relevant product recommendations, and targeted marketing campaigns to increase purchase frequency and customer lifetime value.
+
+**Evidence:**  
+SQL calculated the repeat customer rate and customer-level revenue, while the Customer & Marketing dashboard provides customer and marketing performance analysis.
+
+---
+
+### 6. Prioritize the Largest Revenue Market
+
+The United States generated the highest revenue among the analyzed countries.
+
+**Recommendation:**  
+Prioritize customer retention, product availability, and targeted marketing in the strongest revenue market while using the same KPIs to identify opportunities in lower-performing markets.
+
+**Evidence:**  
+Country-level revenue, orders, and customer performance were analyzed in SQL and represented in the Power BI geographic analysis.
+
 ## Skills Demonstrated
 
 ### SQL
