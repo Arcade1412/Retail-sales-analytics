@@ -1,111 +1,194 @@
 /*
 =========================================================
+Retail Sales Analytics
 Customer Analysis
 
-Question 1
-
-Business Question:
-How are customers distributed across different countries?
-
-Business Importance:
-Understanding customer distribution helps identify
-major markets and supports regional marketing strategies.
-=========================================================
-*/
-
-SELECT
-    country,
-    COUNT(customer_id) AS total_customers
-FROM customer
-GROUP BY country
-ORDER BY total_customers DESC;
-
-/*
-=========================================================
-CUSTOMER ANALYSIS
+Purpose:
+Analyze customer purchasing behavior, revenue contribution,
+order frequency, and customer value.
 =========================================================
 */
 
 USE retail_sales_analytics;
 
--- =====================================================
--- Q1. Customer Distribution by Country
--- =====================================================
-SELECT
-    country,
-    COUNT(customer_id) AS total_customers
-FROM customer
-GROUP BY country
-ORDER BY total_customers DESC;
 
--- =====================================================
--- Q2. Revenue by Country
--- =====================================================
+/* =======================================================
+1. CUSTOMER REVENUE AND ORDER SUMMARY
+======================================================= */
+
+SELECT
+    customer_id,
+    COUNT(order_id) AS total_orders,
+    ROUND(SUM(total_usd), 2) AS total_revenue,
+    ROUND(AVG(total_usd), 2) AS average_order_value
+FROM orders
+GROUP BY customer_id
+ORDER BY total_revenue DESC;
+
+
+/* =======================================================
+2. TOP 10 CUSTOMERS BY REVENUE
+======================================================= */
+
+SELECT
+    customer_id,
+    COUNT(order_id) AS total_orders,
+    ROUND(SUM(total_usd), 2) AS total_revenue,
+    ROUND(AVG(total_usd), 2) AS average_order_value
+FROM orders
+GROUP BY customer_id
+ORDER BY total_revenue DESC
+LIMIT 10;
+
+
+/* =======================================================
+3. CUSTOMER ORDER FREQUENCY
+======================================================= */
+
+SELECT
+    customer_id,
+    COUNT(order_id) AS total_orders,
+    ROUND(SUM(total_usd), 2) AS total_revenue
+FROM orders
+GROUP BY customer_id
+ORDER BY total_orders DESC, total_revenue DESC;
+
+
+/* =======================================================
+4. REPEAT CUSTOMER ANALYSIS
+Customers with more than one order are classified
+as repeat customers.
+======================================================= */
+
+WITH customer_orders AS (
+    SELECT
+        customer_id,
+        COUNT(order_id) AS order_count
+    FROM orders
+    GROUP BY customer_id
+)
+
+SELECT
+    COUNT(*) AS total_customers,
+    SUM(CASE WHEN order_count > 1 THEN 1 ELSE 0 END)
+        AS repeat_customers,
+    SUM(CASE WHEN order_count = 1 THEN 1 ELSE 0 END)
+        AS one_time_customers,
+    ROUND(
+        SUM(CASE WHEN order_count > 1 THEN 1 ELSE 0 END)
+        * 100.0 / NULLIF(COUNT(*), 0),
+        2
+    ) AS repeat_customer_rate_pct
+FROM customer_orders;
+
+
+/* =======================================================
+5. CUSTOMER VALUE SEGMENTATION
+Segments are based on total customer revenue.
+======================================================= */
+
+WITH customer_value AS (
+    SELECT
+        customer_id,
+        COUNT(order_id) AS total_orders,
+        ROUND(SUM(total_usd), 2) AS total_revenue,
+        ROUND(AVG(total_usd), 2) AS average_order_value
+    FROM orders
+    GROUP BY customer_id
+)
+
+SELECT
+    customer_id,
+    total_orders,
+    total_revenue,
+    average_order_value,
+    CASE
+        WHEN total_revenue >= 1000 THEN 'High Value'
+        WHEN total_revenue >= 500 THEN 'Medium Value'
+        ELSE 'Low Value'
+    END AS customer_segment
+FROM customer_value
+ORDER BY total_revenue DESC;
+
+
+/* =======================================================
+6. CUSTOMER SEGMENT SUMMARY
+======================================================= */
+
+WITH customer_value AS (
+    SELECT
+        customer_id,
+        COUNT(order_id) AS total_orders,
+        SUM(total_usd) AS total_revenue
+    FROM orders
+    GROUP BY customer_id
+),
+
+customer_segments AS (
+    SELECT
+        customer_id,
+        total_orders,
+        total_revenue,
+        CASE
+            WHEN total_revenue >= 1000 THEN 'High Value'
+            WHEN total_revenue >= 500 THEN 'Medium Value'
+            ELSE 'Low Value'
+        END AS customer_segment
+    FROM customer_value
+)
+
+SELECT
+    customer_segment,
+    COUNT(customer_id) AS customers,
+    SUM(total_orders) AS total_orders,
+    ROUND(SUM(total_revenue), 2) AS total_revenue,
+    ROUND(AVG(total_revenue), 2) AS average_customer_revenue
+FROM customer_segments
+GROUP BY customer_segment
+ORDER BY total_revenue DESC;
+
+
+/* =======================================================
+7. CUSTOMER PERFORMANCE BY COUNTRY
+======================================================= */
+
 SELECT
     country,
-    ROUND(SUM(total_usd),2) AS total_revenue
+    COUNT(DISTINCT customer_id) AS customers,
+    COUNT(order_id) AS total_orders,
+    ROUND(SUM(total_usd), 2) AS total_revenue,
+    ROUND(AVG(total_usd), 2) AS average_order_value
 FROM orders
 GROUP BY country
 ORDER BY total_revenue DESC;
 
--- =====================================================
--- Q3. Orders by Country
--- =====================================================
-SELECT
-    country,
-    COUNT(order_id) AS total_orders
-FROM orders
-GROUP BY country
-ORDER BY total_orders DESC;
 
--- =====================================================
--- Q4. Top 10 Customers by Revenue
--- =====================================================
+/* =======================================================
+8. HIGH-VALUE CUSTOMER CONTRIBUTION
+======================================================= */
+
+WITH customer_value AS (
+    SELECT
+        customer_id,
+        SUM(total_usd) AS total_revenue
+    FROM orders
+    GROUP BY customer_id
+),
+
+ranked_customers AS (
+    SELECT
+        customer_id,
+        total_revenue,
+        RANK() OVER (
+            ORDER BY total_revenue DESC
+        ) AS revenue_rank
+    FROM customer_value
+)
+
 SELECT
     customer_id,
-    ROUND(SUM(total_usd),2) AS total_spent
-FROM orders
-GROUP BY customer_id
-ORDER BY total_spent DESC
-LIMIT 10;
-
--- =====================================================
--- Q5. Customer Distribution by Age
--- =====================================================
-SELECT
-    age,
-    COUNT(customer_id) AS total_customers
-FROM customer
-GROUP BY age
-ORDER BY age;
-
--- =====================================================
--- Q6. Marketing Opt-in Analysis
--- =====================================================
-SELECT
-    marketing_opt_in,
-    COUNT(customer_id) AS total_customers,
-    ROUND(
-        COUNT(customer_id) * 100.0 /
-        (SELECT COUNT(*) FROM customer),
-        2
-    ) AS percentage
-FROM customer
-GROUP BY marketing_opt_in;
-
-/*=========================================================
-CUSTOMER ANALYSIS SUMMARY
-Purpose:
-Return high-level customer KPIs in a single row.
-=========================================================*/
-
-SELECT
-    COUNT(*) AS total_customers,
-    COUNT(DISTINCT country) AS total_countries,
-    ROUND(AVG(age),2) AS average_customer_age,
-    SUM(marketing_opt_in = 1) AS marketing_opt_in_customers,
-    ROUND(
-        SUM(marketing_opt_in = 1) * 100.0 / COUNT(*),
-        2
-    ) AS marketing_opt_in_percentage
-FROM customer;
+    ROUND(total_revenue, 2) AS total_revenue,
+    revenue_rank
+FROM ranked_customers
+WHERE revenue_rank <= 10
+ORDER BY revenue_rank;
