@@ -1,307 +1,238 @@
 /*
 =========================================================
-Retail Sales, Customer & Marketing Analytics Platform
-
-Phase 5
-Data Validation & Data Cleaning
-
-Author :Nitish kumar
+Retail Sales Analytics
+Executive KPI Analysis
 
 Purpose:
-Validate imported data before performing business analysis.
-
-Checks Included:
-
-1. Row Count Validation
-2. Duplicate Primary Keys
-3. NULL Analysis
-4. Invalid Values
-5. Referential Integrity
-6. Business Rule Validation
-
+Calculate the main business KPIs used for executive
+reporting and the Power BI dashboard.
 =========================================================
 */
 
 USE retail_sales_analytics;
-/*=========================================================
-1. DUPLICATE PRIMARY KEY VALIDATION
-=========================================================*/
-
--- Customer
-SELECT customer_id, COUNT(*) AS duplicate_count
-FROM customer
-GROUP BY customer_id
-HAVING COUNT(*) > 1;
-
--- Product
-SELECT product_id, COUNT(*) AS duplicate_count
-FROM product
-GROUP BY product_id
-HAVING COUNT(*) > 1;
-
--- Customer Session
-SELECT session_id, COUNT(*) AS duplicate_count
-FROM customer_session
-GROUP BY session_id
-HAVING COUNT(*) > 1;
-
--- Orders
-SELECT order_id, COUNT(*) AS duplicate_count
-FROM orders
-GROUP BY order_id
-HAVING COUNT(*) > 1;
-
--- Order Items
-SELECT order_item_id, COUNT(*) AS duplicate_count
-FROM order_items
-GROUP BY order_item_id
-HAVING COUNT(*) > 1;
-
--- Events
-SELECT event_id, COUNT(*) AS duplicate_count
-FROM events
-GROUP BY event_id
-HAVING COUNT(*) > 1;
-
--- Reviews
-SELECT review_id, COUNT(*) AS duplicate_count
-FROM reviews
-GROUP BY review_id
-HAVING COUNT(*) > 1;
-/*=========================================================
-2. NULL VALUE ANALYSIS
-Purpose:
-Identify missing values that may affect reporting,
-analysis and dashboard calculations.
-=========================================================*/
-
--- Customer
-SELECT
-    SUM(customer_name IS NULL) AS missing_customer_name,
-    SUM(email IS NULL) AS missing_email,
-    SUM(country IS NULL) AS missing_country,
-    SUM(age IS NULL) AS missing_age,
-    SUM(signup_date IS NULL) AS missing_signup_date,
-    SUM(marketing_opt_in IS NULL) AS missing_marketing_opt_in
-FROM customer;
-
--- Product
-SELECT
-    SUM(category IS NULL) AS missing_category,
-    SUM(product_name IS NULL) AS missing_product_name,
-    SUM(price_usd IS NULL) AS missing_price,
-    SUM(cost_usd IS NULL) AS missing_cost,
-    SUM(margin_usd IS NULL) AS missing_margin
-FROM product;
-
--- Customer Session
-SELECT
-    SUM(customer_id IS NULL) AS missing_customer_id,
-    SUM(start_time IS NULL) AS missing_start_time,
-    SUM(device IS NULL) AS missing_device,
-    SUM(traffic_source IS NULL) AS missing_traffic_source,
-    SUM(country IS NULL) AS missing_country
-FROM customer_session;
-
--- Orders
-SELECT
-    SUM(customer_id IS NULL) AS missing_customer_id,
-    SUM(order_time IS NULL) AS missing_order_time,
-    SUM(payment_method IS NULL) AS missing_payment_method,
-    SUM(discount_pct IS NULL) AS missing_discount_pct,
-    SUM(subtotal_usd IS NULL) AS missing_subtotal,
-    SUM(total_usd IS NULL) AS missing_total,
-    SUM(device IS NULL) AS missing_device,
-    SUM(traffic_source IS NULL) AS missing_traffic_source,
-    SUM(country IS NULL) AS missing_country
-FROM orders;
-
--- Order Items
-SELECT
-    SUM(order_id IS NULL) AS missing_order_id,
-    SUM(product_id IS NULL) AS missing_product_id,
-    SUM(quantity IS NULL) AS missing_quantity,
-    SUM(unit_price_usd IS NULL) AS missing_unit_price,
-    SUM(line_total_usd IS NULL) AS missing_line_total
-FROM order_items;
-
--- Events
-SELECT
-    SUM(session_id IS NULL) AS missing_session_id,
-    SUM(event_timestamp IS NULL) AS missing_event_timestamp,
-    SUM(event_type IS NULL) AS missing_event_type,
-    SUM(product_id IS NULL) AS missing_product_id,
-    SUM(quantity IS NULL) AS missing_quantity,
-    SUM(cart_size IS NULL) AS missing_cart_size,
-    SUM(payment IS NULL) AS missing_payment,
-    SUM(discount_amount IS NULL) AS missing_discount_amount,
-    SUM(amount_usd IS NULL) AS missing_amount
-FROM events;
-
--- Reviews
-SELECT
-    SUM(order_id IS NULL) AS missing_order_id,
-    SUM(product_id IS NULL) AS missing_product_id,
-    SUM(rating IS NULL) AS missing_rating,
-    SUM(review_time IS NULL) AS missing_review_time,
-    SUM(review_text IS NULL) AS missing_review_text
-FROM reviews;
-
-/*=========================================================
-3. INVALID BUSINESS VALUE ANALYSIS
-Purpose:
-Identify values that violate business rules.
-=========================================================*/
-
--- Customer: Invalid Age
-SELECT *
-FROM customer
-WHERE age < 0
-   OR age > 120;
-
--- Product: Negative Price / Cost / Margin
-SELECT *
-FROM product
-WHERE price_usd < 0
-   OR cost_usd < 0
-   OR margin_usd < 0;
-
--- Orders: Invalid Discount or Amounts
-SELECT *
-FROM orders
-WHERE discount_pct < 0
-   OR discount_pct > 100
-   OR subtotal_usd < 0
-   OR total_usd < 0;
-
--- Order Items: Invalid Quantity or Price
-SELECT *
-FROM order_items
-WHERE quantity <= 0
-   OR unit_price_usd <= 0
-   OR line_total_usd <= 0;
-
--- Reviews: Rating must be between 1 and 5
-SELECT *
-FROM reviews
-WHERE rating NOT BETWEEN 1 AND 5;
 
 
-/*=========================================================
-4. REFERENTIAL INTEGRITY VALIDATION
-Purpose:
-Ensure relationships between tables are valid.
-=========================================================*/
-
--- Orders without a Customer
-SELECT o.order_id
-FROM orders o
-LEFT JOIN customer c
-ON o.customer_id = c.customer_id
-WHERE c.customer_id IS NULL;
-
--- Order Items without an Order
-SELECT oi.order_item_id
-FROM order_items oi
-LEFT JOIN orders o
-ON oi.order_id = o.order_id
-WHERE o.order_id IS NULL;
-
--- Order Items without a Product
-SELECT oi.order_item_id
-FROM order_items oi
-LEFT JOIN product p
-ON oi.product_id = p.product_id
-WHERE p.product_id IS NULL;
-
--- Customer Sessions without a Customer
-SELECT cs.session_id
-FROM customer_session cs
-LEFT JOIN customer c
-ON cs.customer_id = c.customer_id
-WHERE c.customer_id IS NULL;
-
--- Events without a Session
-SELECT e.event_id
-FROM events e
-LEFT JOIN customer_session cs
-ON e.session_id = cs.session_id
-WHERE cs.session_id IS NULL;
-
--- Reviews without an Order
-SELECT r.review_id
-FROM reviews r
-LEFT JOIN orders o
-ON r.order_id = o.order_id
-WHERE o.order_id IS NULL;
-
--- Reviews without a Product
-SELECT r.review_id
-FROM reviews r
-LEFT JOIN product p
-ON r.product_id = p.product_id
-WHERE p.product_id IS NULL;
-
-/*=========================================================
-KPI 7 - Average Orders per Customer
-=========================================================*/
+/* =======================================================
+1. CORE SALES KPIs
+======================================================= */
 
 SELECT
-    ROUND(
-        COUNT(order_id) / COUNT(DISTINCT customer_id),
-        2
-    ) AS avg_orders_per_customer
-FROM orders;
-
-/*=========================================================
-KPI 8 - Total Quantity Sold
-=========================================================*/
-
-SELECT
-    SUM(quantity) AS total_quantity_sold
-FROM order_items;
-
-/*=========================================================
-KPI 9 - Average Discount
-=========================================================*/
-
-SELECT
-    ROUND(AVG(discount_pct),2) AS average_discount
-FROM orders;
-
-/*=========================================================
-KPI 10 - Revenue per Customer
-=========================================================*/
-
-SELECT
-    ROUND(
-        SUM(total_usd) /
-        COUNT(DISTINCT customer_id),
-        2
-    ) AS revenue_per_customer
-FROM orders;
-
-
-/*=========================================================
-EXECUTIVE KPI SUMMARY
-Purpose:
-Return all key business metrics in a single query.
-=========================================================*/
-
-SELECT
-    ROUND(SUM(total_usd),2) AS total_revenue,
+    ROUND(SUM(total_usd), 2) AS total_revenue,
     COUNT(order_id) AS total_orders,
     COUNT(DISTINCT customer_id) AS total_customers,
-    ROUND(AVG(total_usd),2) AS average_order_value,
-    ROUND(AVG(discount_pct),2) AS average_discount,
-    ROUND(
-        COUNT(order_id) /
-        COUNT(DISTINCT customer_id),
-        2
-    ) AS average_orders_per_customer,
-    ROUND(
-        SUM(total_usd) /
-        COUNT(DISTINCT customer_id),
-        2
-    ) AS revenue_per_customer
+    ROUND(AVG(total_usd), 2) AS average_order_value
 FROM orders;
+
+
+/* =======================================================
+2. SALES VOLUME KPIs
+======================================================= */
+
+SELECT
+    SUM(oi.quantity) AS total_units_sold,
+    ROUND(AVG(oi.quantity), 2) AS avg_units_per_order
+FROM order_items oi;
+
+
+/* =======================================================
+3. CUSTOMER VALUE KPIs
+======================================================= */
+
+SELECT
+    ROUND(
+        SUM(total_usd) / NULLIF(COUNT(DISTINCT customer_id), 0),
+        2
+    ) AS revenue_per_customer,
+
+    ROUND(
+        COUNT(order_id) / NULLIF(COUNT(DISTINCT customer_id), 0),
+        2
+    ) AS orders_per_customer
+FROM orders;
+
+
+/* =======================================================
+4. DISCOUNT PERFORMANCE
+======================================================= */
+
+SELECT
+    ROUND(AVG(discount_pct), 2) AS average_discount_pct,
+    ROUND(MIN(discount_pct), 2) AS minimum_discount_pct,
+    ROUND(MAX(discount_pct), 2) AS maximum_discount_pct
+FROM orders;
+
+
+/* =======================================================
+5. REPEAT CUSTOMER RATE
+A repeat customer is defined as a customer with
+more than one completed order.
+======================================================= */
+
+WITH customer_orders AS (
+    SELECT
+        customer_id,
+        COUNT(order_id) AS order_count
+    FROM orders
+    GROUP BY customer_id
+)
+
+SELECT
+    COUNT(*) AS total_customers,
+    SUM(CASE WHEN order_count > 1 THEN 1 ELSE 0 END)
+        AS repeat_customers,
+    ROUND(
+        SUM(CASE WHEN order_count > 1 THEN 1 ELSE 0 END)
+        * 100.0 / NULLIF(COUNT(*), 0),
+        2
+    ) AS repeat_customer_rate_pct
+FROM customer_orders;
+
+
+/* =======================================================
+6. MONTHLY REVENUE TREND
+======================================================= */
+
+SELECT
+    DATE_FORMAT(order_time, '%Y-%m') AS sales_month,
+    ROUND(SUM(total_usd), 2) AS monthly_revenue,
+    COUNT(order_id) AS monthly_orders,
+    ROUND(AVG(total_usd), 2) AS monthly_aov
+FROM orders
+GROUP BY DATE_FORMAT(order_time, '%Y-%m')
+ORDER BY sales_month;
+
+
+/* =======================================================
+7. MONTH-OVER-MONTH REVENUE GROWTH
+======================================================= */
+
+WITH monthly_sales AS (
+    SELECT
+        DATE_FORMAT(order_time, '%Y-%m') AS sales_month,
+        ROUND(SUM(total_usd), 2) AS revenue
+    FROM orders
+    GROUP BY DATE_FORMAT(order_time, '%Y-%m')
+),
+
+sales_with_previous_month AS (
+    SELECT
+        sales_month,
+        revenue,
+        LAG(revenue) OVER (
+            ORDER BY sales_month
+        ) AS previous_month_revenue
+    FROM monthly_sales
+)
+
+SELECT
+    sales_month,
+    revenue,
+    previous_month_revenue,
+    ROUND(
+        (revenue - previous_month_revenue)
+        * 100.0
+        / NULLIF(previous_month_revenue, 0),
+        2
+    ) AS revenue_growth_pct
+FROM sales_with_previous_month
+ORDER BY sales_month;
+
+
+/* =======================================================
+8. PAYMENT METHOD PERFORMANCE
+======================================================= */
+
+SELECT
+    payment_method,
+    COUNT(order_id) AS total_orders,
+    ROUND(SUM(total_usd), 2) AS total_revenue,
+    ROUND(AVG(total_usd), 2) AS average_order_value
+FROM orders
+GROUP BY payment_method
+ORDER BY total_revenue DESC;
+
+
+/* =======================================================
+9. DEVICE PERFORMANCE
+======================================================= */
+
+SELECT
+    device,
+    COUNT(order_id) AS total_orders,
+    ROUND(SUM(total_usd), 2) AS total_revenue,
+    ROUND(AVG(total_usd), 2) AS average_order_value
+FROM orders
+GROUP BY device
+ORDER BY total_revenue DESC;
+
+
+/* =======================================================
+10. TRAFFIC SOURCE PERFORMANCE
+======================================================= */
+
+SELECT
+    traffic_source,
+    COUNT(order_id) AS total_orders,
+    ROUND(SUM(total_usd), 2) AS total_revenue,
+    ROUND(AVG(total_usd), 2) AS average_order_value
+FROM orders
+GROUP BY traffic_source
+ORDER BY total_revenue DESC;
+
+
+/* =======================================================
+11. EXECUTIVE KPI SUMMARY
+Single-row summary for reporting.
+======================================================= */
+
+WITH customer_orders AS (
+    SELECT
+        customer_id,
+        COUNT(order_id) AS order_count
+    FROM orders
+    GROUP BY customer_id
+),
+
+repeat_rate AS (
+    SELECT
+        ROUND(
+            SUM(CASE WHEN order_count > 1 THEN 1 ELSE 0 END)
+            * 100.0 / NULLIF(COUNT(*), 0),
+            2
+        ) AS repeat_customer_rate_pct
+    FROM customer_orders
+),
+
+sales_kpis AS (
+    SELECT
+        ROUND(SUM(total_usd), 2) AS total_revenue,
+        COUNT(order_id) AS total_orders,
+        COUNT(DISTINCT customer_id) AS total_customers,
+        ROUND(AVG(total_usd), 2) AS average_order_value,
+        ROUND(AVG(discount_pct), 2) AS average_discount_pct,
+        ROUND(
+            SUM(total_usd) /
+            NULLIF(COUNT(DISTINCT customer_id), 0),
+            2
+        ) AS revenue_per_customer
+    FROM orders
+),
+
+unit_kpis AS (
+    SELECT
+        SUM(quantity) AS total_units_sold
+    FROM order_items
+)
+
+SELECT
+    s.total_revenue,
+    s.total_orders,
+    s.total_customers,
+    u.total_units_sold,
+    s.average_order_value,
+    s.average_discount_pct,
+    s.revenue_per_customer,
+    r.repeat_customer_rate_pct
+FROM sales_kpis s
+CROSS JOIN unit_kpis u
+CROSS JOIN repeat_rate r;
